@@ -180,38 +180,47 @@ class ModifyControl extends Control {
      */
     this.selectMove = new ol.interaction.Select({
       condition: ol.events.condition.singleClick,
-      toggleCondition: e => (ol.events.condition.doubleClick(e)),
       layers: this.layerFilter,
-      features: this.featuresToMove,
       style: this.selectStyle,
       hitTolerance: this.hitTolerance,
       wrapX: false,
     });
 
     if (this.selectStyle) {
-      // Apply the select style dynamically when the feature has its own style.
-      this.selectMove.getFeatures().on('add', (evt) => {
-        this.onSelectFeature(evt.element, this.selectStyle, SELECT_MOVE_ON_CHANGE_KEY);
-      });
+      this.selectMove.on('select', (evt) => {
+        window.console.log('MOVE selectFeature to style');
+        // Apply the select style dynamically when the feature has its own style.
+        evt.selected.forEach((f) => {
+          this.onSelectFeature(f, this.selectStyle, SELECT_MOVE_ON_CHANGE_KEY);
+        });
 
-      // Remove the select style dynamically when the feature had its own style.
-      this.selectMove.getFeatures().on('remove', (evt) => {
-        this.onDeselectFeature(evt.element, this.selectStyle, SELECT_MOVE_ON_CHANGE_KEY);
+        // Remove the select style dynamically when the feature had its own style.
+        evt.deselected.forEach((f) => {
+          this.onSelectFeature(f, this.selectStyle, SELECT_MOVE_ON_CHANGE_KEY);
+        });
       });
     }
 
-    this.selectMove.getFeatures().on('add', (evt) => {
-      this.selectModify.getFeatures().clear();
-      this.changeCursor('move');
-      document.addEventListener('keydown', this.deleteFeature.bind(this));
-      this.map.addInteraction(this.moveInteraction);
-      // Set the target element as initial feature to move.
-      this.feature = evt.element;
+    this.selectMove.on('select', (evt) => {
+      window.console.log(evt.selected);
+      window.console.log('MOVE selectFeature for deletion');
+      // this.changeCursor('move');
+      // document.addEventListener('keydown', this.deleteFeature.bind(this));
+      if (this.selectMove.getFeatures().getLength()) {
+        this.selectModify.getFeatures().clear();
+        // Set the target element as initial feature to move.
+        this.feature = this.selectMove.getFeatures().get(0);
+        window.console.log(this.feature);
+        this.map.addInteraction(this.moveInteraction);
+      } else {
+        this.map.removeInteraction(this.moveInteraction);
+      }
     });
 
-    this.selectMove.getFeatures().on('remove', () => {
-      this.changeCursor(null);
-      document.removeEventListener('keydown', this.deleteFeature.bind(this));
+    this.selectMove.on('deselect', () => {
+      window.console.log('MOVE deselectFeature for deletion');
+      // this.changeCursor(null);
+      // document.removeEventListener('keydown', this.deleteFeature.bind(this));
       this.map.removeInteraction(this.moveInteraction);
     });
 
@@ -226,19 +235,19 @@ class ModifyControl extends Control {
       condition: ol.events.condition.doubleClick,
       toggleCondition: ol.events.condition.shiftKeyOnly,
       layers: this.layerFilter,
-      features: this.featuresToModify,
       style: this.modifyStyle,
       hitTolerance: this.hitTolerance,
       wrapX: false,
     });
 
-    this.selectModify.getFeatures().on('add', (evt) => {
+    this.selectModify.on('select', (evt) => {
+      window.console.log('MODIF selectFeature to style');
       this.selectMove.getFeatures().clear();
-      this.changeCursor('grab');
-      document.addEventListener('keydown', this.deleteFeature.bind(this));
+      // this.changeCursor('grab');
+      // document.addEventListener('keydown', this.deleteFeature.bind(this));
       this.map.addInteraction(this.modifyInteraction);
-      this.map.addEventListener('pointermove', this.modifyCursorHandler.bind(this));
-      this.map.addEventListener('click', this.modifyUnselect.bind(this));
+      // this.map.addEventListener('pointermove', this.modifyCursorHandler.bind(this));
+      // this.map.addEventListener('click', this.modifyUnselect.bind(this));
 
       if (this.modifyStyle) {
         // Apply the select style dynamically when the feature has its own style.
@@ -246,11 +255,12 @@ class ModifyControl extends Control {
       }
     });
 
-    this.selectModify.getFeatures().on('remove', (evt) => {
+    this.selectModify.on('deselect', (evt) => {
+      window.console.log('MODIF deselectFeature to style');
       this.changeCursor(null);
-      document.removeEventListener('keydown', this.deleteFeature.bind(this));
+      // document.removeEventListener('keydown', this.deleteFeature.bind(this));
       this.map.removeInteraction(this.modifyInteraction);
-      this.map.removeEventListener('pointermove', this.modifyCursorHandler.bind(this));
+      // this.map.removeEventListener('pointermove', this.modifyCursorHandler.bind(this));
 
       if (this.modifyStyle) {
         this.onDeselectFeature(evt.element, this.modifyStyle, SELECT_MODIFY_ON_CHANGE_KEY);
@@ -424,7 +434,7 @@ class ModifyControl extends Control {
    */
   activate() {
     this.map.addInteraction(this.selectMove);
-    this.map.addInteraction(this.selectModify);
+    //this.map.addInteraction(this.selectModify);
     super.activate();
   }
 
@@ -435,7 +445,7 @@ class ModifyControl extends Control {
     this.selectMove.getFeatures().clear();
     this.selectModify.getFeatures().clear();
     this.map.removeInteraction(this.selectMove);
-    this.map.removeInteraction(this.selectModify);
+    //this.map.removeInteraction(this.selectModify);
     super.deactivate(silent);
   }
 }

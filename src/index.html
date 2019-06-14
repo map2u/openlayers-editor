@@ -11,12 +11,30 @@
     <script type="text/javascript">
       var editLayer = new ol.layer.Vector({
         source: new ol.source.Vector({
-          wrapX: false,
+          wrapX: false
         })
       });
       const PROJECTION = ol.proj.get("EPSG:3857");
       const PROJECTION_EXTENT = PROJECTION.getExtent();
 
+      var line = new ol.Feature(
+        new ol.geom.LineString([
+          [871800.1374494438, 6105376.581735712],
+          [873066.1257304171, 6106824.107958862],
+          [873997.7020126426, 6105720.548362995],
+          [872913.2516738467, 6105175.934536463]
+        ])
+      );
+      line.setStyle(
+        new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: "red",
+            lineDash: [1, 10],
+            width: 4
+          })
+        })
+      );
+      editLayer.getSource().addFeature(line);
       var map = new ol.Map({
         layers: [
           new ol.layer.Tile({
@@ -114,7 +132,7 @@
       });
 
       var modify = new ole.control.Modify({
-        source: editLayer.getSource(),
+        source: editLayer.getSource()
       });
 
       var buffer = new ole.control.Buffer({
